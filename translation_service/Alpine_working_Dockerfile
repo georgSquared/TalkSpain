@@ -1,0 +1,62 @@
+FROM python:2.7-alpine3.6
+
+#Install packages necessary for building apertium
+RUN apk add --update --no-cache \
+make \
+gcc \
+g++ \
+subversion \
+autoconf \
+automake \
+libtool \
+flex \
+pcre \
+pcre-dev \
+libpcrecpp \
+libxml2 \
+libxml2-utils \
+libxslt \
+libxslt-dev
+
+#Set environment variables
+ENV LD_LIBRARY_PATH=/usr/local/lib
+ENV PKG_CONFIG_PATH=/usr/local/lib/pkgconfig
+
+WORKDIR /translation_service
+
+ADD . /translation_service
+
+#Compile Apertium
+RUN svn checkout https://svn.code.sf.net/p/apertium/svn/trunk/lttoolbox \
+&& svn checkout https://svn.code.sf.net/p/apertium/svn/trunk/apertium \
+&& svn checkout https://svn.code.sf.net/p/apertium/svn/trunk/apertium-lex-tools \
+&& svn checkout https://svn.code.sf.net/p/apertium/svn/trunk/apertium-en-es \
+#Build in each folder
+&& cd lttoolbox \
+&& ./autogen.sh \
+&& make \
+&& make install \
+
+&& cd ../apertium \
+&& ./autogen.sh \
+&& make \
+&& make install \
+
+&& cd ../apertium-lex-tools \
+&& ./autogen.sh \
+&& make \
+&& make install \
+
+&& cd ../apertium-en-es \
+&& ./autogen.sh \
+&& make \
+&& make install
+
+WORKDIR /translation_service
+
+#Install python requirements
+RUN pip install -r requirements.txt
+
+EXPOSE 80
+
+CMD ["python", "translation_service.py"]

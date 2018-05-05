@@ -1,0 +1,20 @@
+version: '3'
+
+services:
+  speech_service:
+    image: speech_service:latest
+    ports:
+      - 6001:80
+
+  translation_service:
+    image: translation_service:latest
+    ports:
+      - 6002:80
+
+  sender_service:
+    image: sender_service:latest
+    ports:
+      - 6000:80    
+    depends_on:
+      - speech_service
+      - translation_service
